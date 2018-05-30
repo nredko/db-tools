@@ -97,24 +97,30 @@ def to_html_table(table):
         else:
             parts.append(name)
         parts.append('</td>')
-        parts.append('<td>%s</td>' % type)
+        parts.append('<td>%s</td>' % type.replace('timestamp without time zone', 'timestamp').replace('character varying', 'text'))
         parts.append('</tr>\n')
     parts.append('</table>')
-    return ''.join(parts)
+    w = 0
+    for s in parts:
+        w = max(w, len(s)) 
+    return {"t":''.join(parts), "w": w*10}
 
 def guess_node_height(table):
-    ROW_HEIGHT = 22
+    ROW_HEIGHT = 25
     EXTRA = 36
     return len(table.columns) * ROW_HEIGHT + EXTRA
 
 def to_graphml_node(table, node_id):
-    label = "%s.%s" % (table.schema, table.name)
-    content = escape('<html>' + to_html_table(table))
+#    label = "%s.%s" % (table.schema, table.name)
+    label = table.name
+    t = to_html_table(table)
+    content = escape('<html>' + t["t"])
     height = guess_node_height(table)
+    width = t["w"]
     return """<node id="%(node_id)s">
       <data key="d6">
         <y:GenericNode configuration="com.yworks.entityRelationship.big_entity">
-          <y:Geometry height="%(height)d" width="153.0" x="-76.5" y="226.5"/>
+          <y:Geometry height="%(height)d" width="%(width)d" x="-76.5" y="226.5"/>
           <y:Fill color="#E8EEF7" color2="#B7C9E3" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
           <y:NodeLabel alignment="center" autoSizePolicy="content" backgroundColor="#B7C9E3"
